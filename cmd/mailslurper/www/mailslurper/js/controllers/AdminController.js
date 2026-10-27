@@ -127,7 +127,8 @@
 		window.SettingsService.storeSettings(settings)
 			.then(function () {
 				if (settings.theme != currentTheme) {
-					window.location = "/admin";
+					var appURL = window.SettingsService.getAppURL();
+					window.location = appURL + "/admin";
 					return;
 				}
 
@@ -173,10 +174,6 @@
 	var adminSettings;
 
 	var serviceURL;
-	window.SettingsService.retrieveServiceSettings().then(function(url) {
-		serviceURL = window.SettingsService.getServiceURL(url);
-	});
-
 	var pruneOptions = [];
 	var currentTheme = "";
 
@@ -188,7 +185,11 @@
 			window.AlertService.error(err);
 		});
 
-	window.SeedService.getPruneOptions(serviceURL)
+	window.SettingsService.ensureServiceSettings()
+		.then(function () {
+			serviceURL = window.SettingsService.getServiceURL();
+			return window.SeedService.getPruneOptions(serviceURL);
+		})
 		.then(function (response) {
 			pruneOptions = response;
 

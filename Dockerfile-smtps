@@ -1,19 +1,23 @@
-FROM golang:1.13-alpine as builder
+FROM golang:alpine as builder
 
-ENV GO111MODULE=on
+LABEL maintainer="erguotou525@gmail.compute"
 
-RUN apk --no-cache add git libc-dev gcc
-RUN go get github.com/mjibson/esc
+RUN apk --no-cache add git libc-dev gcc sqlite-dev
+RUN go install github.com/mjibson/esc@latest # TODO: Consider using native file embedding
 
 COPY . /go/src/github.com/mailslurper/mailslurper
 WORKDIR /go/src/github.com/mailslurper/mailslurper/cmd/mailslurper
 
 RUN go get
 RUN go generate
-RUN go build
+RUN CGO_CFLAGS="-D_LARGEFILE64_SOURCE" CGO_ENABLED=1 GOOS=linux go build -tags="sqlite_omit_load_extension"
+
+FROM alpine:latest
+
+COPY --from=builder /go/src/github.com/mailslurper/mailslurper/cmd/mailslurper/mailslurper mailslurper
 
 ADD assets/* ./
 
-EXPOSE 8080 8085 2500
+EXPOSE 4436 4437 1025
 
 ENTRYPOINT ["./mailslurper"]

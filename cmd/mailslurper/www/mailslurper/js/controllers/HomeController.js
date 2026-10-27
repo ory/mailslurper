@@ -524,13 +524,15 @@
 	var searchMailModalTemplate = null;
 
 	var serviceURL;
-	window.SettingsService.retrieveServiceSettings().then(function(url) {
-		serviceURL = window.SettingsService.getServiceURL(url);
-	});
+	var serviceSettingsReady = window.SettingsService.ensureServiceSettings()
+		.then(function () {
+			serviceURL = window.SettingsService.getServiceURL();
+		});
 
 	window.AlertService.block("Loading");
 
 	Promise.all([
+		serviceSettingsReady,
 		loadMailDetailsTemplate(),
 		loadMailListTemplate(),
 		loadSearchMailModalTemplate()
